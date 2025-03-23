@@ -11,6 +11,16 @@ const config = {
 		adapter: adapter(),
 		paths: {
 			base: dev ? '' : '/pasta-landing-v2'
+		},
+		prerender: {
+			handleHttpError: ({ path, referrer, message }) => {
+				// ignore all 404s
+				if (message.includes('404')) {
+					return;
+				}
+				// otherwise fail the build
+				throw new Error(message);
+			}
 		}
 	}
 };
