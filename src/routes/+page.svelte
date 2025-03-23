@@ -1,82 +1,123 @@
-<script>
+<script lang="ts">
 	import { enhance } from '$app/forms';
 	import { fade } from 'svelte/transition';
 
+	const features = [
+		{
+			icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+				<path d="M11.7 2.805a.75.75 0 01.6 0A60.65 60.65 0 0122.83 8.72a.75.75 0 01-.231 1.337 49.949 49.949 0 00-9.902 3.912l-.003.002-.34.18a.75.75 0 01-.707 0A50.009 50.009 0 007.5 12.174v-.224c0-.131.067-.248.172-.311a54.614 54.614 0 014.653-2.52.75.75 0 00-.65-1.352 56.129 56.129 0 00-4.78 2.589 1.858 1.858 0 00-.859 1.228 49.803 49.803 0 00-4.634-1.527.75.75 0 01-.231-1.337A60.653 60.653 0 0111.7 2.805z" />
+			</svg>`,
+			title: 'Project Tracking',
+			description: 'Manage timelines, milestones, and tasks with clear dashboards and visualizations'
+		},
+		{
+			icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+				<path d="M18.375 2.25c-1.035 0-1.875.84-1.875 1.875v15.75c0 1.035.84 1.875 1.875 1.875h.75c1.035 0 1.875-.84 1.875-1.875V4.125c0-1.036-.84-1.875-1.875-1.875h-.75zM9.75 8.625c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-.75c-1.036 0-1.875-.84-1.875-1.875V8.625zM3 13.125c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v6.75c0 1.035-.84 1.875-1.875 1.875h-.75C3.84 21.75 3 20.91 3 19.875v-6.75z" />
+			</svg>`,
+			title: 'Financial Management',
+			description: 'Real-time budget tracking, expenditure forecasting, and cost control'
+		},
+		{
+			icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+				<path fill-rule="evenodd" d="M12.516 2.17a.75.75 0 00-1.032 0 11.209 11.209 0 01-7.877 3.08.75.75 0 00-.722.515A12.74 12.74 0 002.25 9.75c0 5.942 4.064 10.933 9.563 12.348a.75.75 0 00.374 0c5.499-1.415 9.563-6.406 9.563-12.348 0-1.39-.223-2.73-.635-3.985a.75.75 0 00-.722-.516l-.143.001c-2.996 0-5.717-1.17-7.734-3.08zm3.094 8.016a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+			</svg>`,
+			title: 'Compliance & Security',
+			description: 'Built-in audit trails, regulatory compliance modules, and role-based access controls'
+		},
+		{
+			icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+				<path d="M4.5 6.375a4.125 4.125 0 118.25 0 4.125 4.125 0 01-8.25 0zM14.25 8.625a3.375 3.375 0 116.75 0 3.375 3.375 0 01-6.75 0zM1.5 19.125a7.125 7.125 0 0114.25 0v.003l-.001.119a.75.75 0 01-.363.63 13.067 13.067 0 01-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 01-.364-.63l-.001-.122zM17.25 19.128l-.001.144a2.25 2.25 0 01-.233.96 10.088 10.088 0 005.06-1.01.75.75 0 00.42-.643 4.875 4.875 0 00-6.957-4.611 8.586 8.586 0 011.71 5.157v.003z" />
+			</svg>`,
+			title: 'Contractor Collaboration',
+			description: 'Secure portals for external contractors with controlled data access'
+		},
+		{
+			icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+				<path d="M4.5 6.375a4.125 4.125 0 118.25 0 4.125 4.125 0 01-8.25 0zM14.25 8.625a3.375 3.375 0 116.75 0 3.375 3.375 0 01-6.75 0zM1.5 19.125a7.125 7.125 0 0114.25 0v.003l-.001.119a.75.75 0 01-.363.63 13.067 13.067 0 01-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 01-.364-.63l-.001-.122zM17.25 19.128l-.001.144a2.25 2.25 0 01-.233.96 10.088 10.088 0 005.06-1.01.75.75 0 00.42-.643 4.875 4.875 0 00-6.957-4.611 8.586 8.586 0 011.71 5.157v.003z" />
+			</svg>`,
+			title: 'Workflow Automation',
+			description: 'Automate project approvals, funding requests, and contract changes, integrated with Microsoft 365'
+		}
+	];
+
 	const pricingTabs = [
 		{
-			title: 'Portfolio',
-			price: '$25',
-			period: 'per seat',
-			features: [
-				'Basic project data storage',
-				'Portfolio-level oversight',
-				'Project tracking dashboard',
-				'Basic reporting',
-				'Email support'
+			name: 'Monthly',
+			plans: [
+				{
+					name: 'Portfolio',
+					price: '$25',
+					annualPrice: '$20',
+					period: 'per seat/month',
+					purpose: 'Designed for portfolio management',
+					features: [
+						'Basic storage and project data aggregation (bundled Pico functionality)',
+						'High-level portfolio dashboard for multi-project oversight',
+						'Role-based access tailored for management-level reviews',
+						'Compliance and security features'
+					]
+				},
+				{
+					name: 'Essential',
+					price: '$25',
+					annualPrice: '$20',
+					period: 'per project/month',
+					purpose: 'Ideal for smaller projects (up to $500K)',
+					features: [
+						'Essential project tracking and task management',
+						'Basic financial tracking and budget oversight',
+						'Core compliance checklists and audit trail features',
+						'Standard reporting dashboard for progress monitoring'
+					]
+				},
+				{
+					name: 'Standard',
+					price: '$75',
+					annualPrice: '$60',
+					period: 'per project/month',
+					purpose: 'Ideal for medium-sized projects (up to $5M)',
+					features: [
+						'Includes all Essential Tier features',
+						'Enhanced financial management with forecasting capabilities',
+						'Advanced reporting tools (Kanban boards, Gantt charts)',
+						'Improved contractor collaboration with role-based data sharing',
+						'Integration with external tools (e.g., Microsoft 365)',
+					]
+				},
+				{
+					name: 'Advanced',
+					price: '$250',
+					annualPrice: '$200',
+					period: 'per project/month',
+					purpose: 'Tailored for larger projects (above $5M)',
+					features: [
+						'Includes all Standard Tier features',
+						'Advanced workflow automation (customizable approval processes)',
+						'Comprehensive financial analytics and multi-project integration',
+						'Predictive insights and risk assessment tools',
+						'Extended API access and customizable dashboards',
+						'Premium security and compliance enhancements'
+					]
+				},
+				{
+					name: 'Enterprise',
+					price: 'Custom Pricing (Contact Sales)',
+					annualPrice: 'Custom Pricing (Contact Sales)',
+					period: '',
+					purpose: 'For very large projects or specialized requirements (often projects over $50M)',
+					features: [
+						'Fully customizable feature set',
+						'Option for isolated databases and enhanced data security',
+						'Dedicated account management and premium support',
+						'Advanced integrations (on-premise systems, custom APIs)',
+						'Custom reporting, consulting, and deployment options'
+					]
+				}
 			]
 		},
 		{
-			title: 'Basic',
-			price: '$25',
-			period: 'per project/month',
-			features: [
-				'Perfect for projects up to $500K',
-				'Project timeline management',
-				'Basic financial tracking',
-				'Standard compliance templates',
-				'Up to 10 team members',
-				'Email support',
-				'Basic analytics'
-			]
-		},
-		{
-			title: 'Standard',
-			price: '$75',
-			period: 'per project/month',
-			features: [
-				'Perfect for projects up to $5M',
-				'Advanced project tracking',
-				'Comprehensive financial management',
-				'Custom compliance frameworks',
-				'Up to 25 team members',
-				'Priority support',
-				'Advanced analytics',
-				'Automated workflows',
-				'API access'
-			]
-		},
-		{
-			title: 'Advanced',
-			price: '$250',
-			period: 'per project/month',
-			features: [
-				'Perfect for projects over $5M',
-				'Enterprise-grade project management',
-				'Advanced financial forecasting',
-				'Custom compliance frameworks',
-				'Unlimited team members',
-				'24/7 dedicated support',
-				'Advanced analytics and reporting',
-				'Custom automated workflows',
-				'Full API access',
-				'Custom integrations'
-			]
-		},
-		{
-			title: 'Enterprise',
-			price: 'Contact Sales',
-			period: 'custom pricing',
-			features: [
-				'Custom solutions for large projects',
-				'Specialized requirements support',
-				'Dedicated account manager',
-				'Custom feature development',
-				'Unlimited everything',
-				'Priority support',
-				'Custom integrations',
-				'On-premise deployment options',
-				'Advanced security features',
-				'Custom training and onboarding'
+			name: 'Annual',
+			plans: [
 			]
 		}
 	];
@@ -89,381 +130,190 @@
 	<meta name="description" content="Specialized project management platform for government property and construction projects" />
 </svelte:head>
 
-<section class="landing">
-	<div class="hero">
-		<h1>PASTA</h1>
-		<p class="tagline">Faster, Smarter Government Construction</p>
-		<p class="subtitle">Streamline your government property and construction projects with our specialized project management platform</p>
-		<div class="cta-buttons">
-			<button class="btn-primary">Request Demo</button>
-			<button class="btn-outline">Learn More</button>
-		</div>
-	</div>
-
-	<div class="features-section">
-		<h2>Key Features</h2>
-		<div class="features-grid">
-			<div class="feature-card">
-				<div class="feature-icon">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-						<path d="M11.7 2.805a.75.75 0 01.6 0A60.65 60.65 0 0122.83 8.72a.75.75 0 01-.231 1.337 49.949 49.949 0 00-9.902 3.912l-.003.002-.34.18a.75.75 0 01-.707 0A50.009 50.009 0 007.5 12.174v-.224c0-.131.067-.248.172-.311a54.614 54.614 0 014.653-2.52.75.75 0 00-.65-1.352 56.129 56.129 0 00-4.78 2.589 1.858 1.858 0 00-.859 1.228 49.803 49.803 0 00-4.634-1.527.75.75 0 01-.231-1.337A60.653 60.653 0 0111.7 2.805z" />
-					</svg>
-				</div>
-				<h3>Project Tracking</h3>
-				<p>Manage timelines, milestones, and tasks with clarity and precision</p>
-			</div>
-
-			<div class="feature-card">
-				<div class="feature-icon">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-						<path d="M18.375 2.25c-1.035 0-1.875.84-1.875 1.875v15.75c0 1.035.84 1.875 1.875 1.875h.75c1.035 0 1.875-.84 1.875-1.875V4.125c0-1.036-.84-1.875-1.875-1.875h-.75zM9.75 8.625c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-.75c-1.036 0-1.875-.84-1.875-1.875V8.625zM3 13.125c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v6.75c0 1.035-.84 1.875-1.875 1.875h-.75C3.84 21.75 3 20.91 3 19.875v-6.75z" />
-					</svg>
-				</div>
-				<h3>Financial Management</h3>
-				<p>Real-time budget tracking, forecasting, and expenditure control</p>
-			</div>
-
-			<div class="feature-card">
-				<div class="feature-icon">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-						<path fill-rule="evenodd" d="M12.516 2.17a.75.75 0 00-1.032 0 11.209 11.209 0 01-7.877 3.08.75.75 0 00-.722.515A12.74 12.74 0 002.25 9.75c0 5.942 4.064 10.933 9.563 12.348a.75.75 0 00.374 0c5.499-1.415 9.563-6.406 9.563-12.348 0-1.39-.223-2.73-.635-3.985a.75.75 0 00-.722-.516l-.143.001c-2.996 0-5.717-1.17-7.734-3.08zm3.094 8.016a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-					</svg>
-				</div>
-				<h3>Compliance & Security</h3>
-				<p>Built-in modules to ensure regulatory compliance and robust audit trails</p>
-			</div>
-
-			<div class="feature-card">
-				<div class="feature-icon">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-						<path d="M4.5 6.375a4.125 4.125 0 118.25 0 4.125 4.125 0 01-8.25 0zM14.25 8.625a3.375 3.375 0 116.75 0 3.375 3.375 0 01-6.75 0zM1.5 19.125a7.125 7.125 0 0114.25 0v.003l-.001.119a.75.75 0 01-.363.63 13.067 13.067 0 01-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 01-.364-.63l-.001-.122zM17.25 19.128l-.001.144a2.25 2.25 0 01-.233.96 10.088 10.088 0 005.06-1.01.75.75 0 00.42-.643 4.875 4.875 0 00-6.957-4.611 8.586 8.586 0 011.71 5.157v.003z" />
-					</svg>
-				</div>
-				<h3>Contractor Collaboration</h3>
-				<p>Secure portals with role-based access for external contractors</p>
-			</div>
-		</div>
-	</div>
-
-	<div class="pricing-section">
-		<h2>Simple, Transparent Pricing</h2>
-		<div class="pricing-grid">
-			{#each pricingTabs as tab}
-				<div class="pricing-card">
-					<h3>{tab.title}</h3>
-					<div class="price">
-						<span class="amount">{tab.price}</span>
-						<span class="period">{tab.period}</span>
+<div class="min-h-screen bg-gradient-to-b from-white to-slate-50">
+	<header class="relative overflow-hidden bg-white">
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+			<div class="relative z-10 py-8 bg-white sm:py-16 md:py-20 lg:max-w-2xl lg:w-full lg:py-28 xl:py-32">
+				<div class="sm:text-center lg:text-left">
+					<h1 class="text-4xl tracking-tight font-extrabold text-slate-900 sm:text-5xl md:text-6xl">
+						<span class="block xl:inline">PASTA</span>
+						<span class="block text-sky-600 text-3xl mt-3">Faster, Smarter Government Construction</span>
+					</h1>
+					<p class="mt-3 text-base text-slate-600 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
+						Streamline your government property and construction projects with our specialized project management platform
+					</p>
+					<div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
+						<div class="rounded-md shadow">
+							<button class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-sky-600 hover:bg-sky-700 md:py-4 md:text-lg md:px-10">
+								Request Demo
+							</button>
+						</div>
+						<div class="mt-3 sm:mt-0 sm:ml-3">
+							<button class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-sky-700 bg-sky-100 hover:bg-sky-200 md:py-4 md:text-lg md:px-10">
+								Learn More
+							</button>
+						</div>
 					</div>
-					<ul class="features-list">
-						{#each tab.features as feature}
-							<li>{feature}</li>
-						{/each}
-					</ul>
-					<button class="btn-primary w-full">Get Started</button>
 				</div>
-			{/each}
+			</div>
+		</div>
+		<div class="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
+			<div class="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full bg-gradient-to-br from-sky-400 to-sky-600">
+				<div class="h-full w-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
+					<svg class="w-48 h-48 text-white/20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205l3 1m1.5.5l-1.5-.5M6.75 7.364V3h-3v18m3-13.636l10.5-3.819" />
+					</svg>
+				</div>
+			</div>
+		</div>
+	</header>
+
+	<div class="py-24 bg-white">
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+			<div class="lg:text-center">
+				<h2 class="text-3xl font-extrabold text-slate-900 sm:text-4xl">Key Features</h2>
+				<p class="mt-4 max-w-2xl text-xl text-slate-600 lg:mx-auto">
+					Everything you need to manage complex government construction projects effectively
+				</p>
+			</div>
+
+			<div class="mt-20">
+				<div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+					{#each features as feature}
+						<div class="pt-6" transition:fade>
+							<div class="flow-root bg-white rounded-lg px-6 pb-8 h-full border border-slate-200 hover:border-sky-500 transition-all shadow-sm hover:shadow-lg">
+								<div class="-mt-6">
+									<div class="inline-flex items-center justify-center p-3 bg-sky-500 rounded-md shadow-lg">
+										<div class="h-8 w-8 text-white">
+											{@html feature.icon}
+										</div>
+									</div>
+									<h3 class="mt-8 text-lg font-medium text-slate-900 tracking-tight">{feature.title}</h3>
+									<p class="mt-5 text-base text-slate-600">{feature.description}</p>
+								</div>
+							</div>
+						</div>
+					{/each}
+				</div>
+			</div>
 		</div>
 	</div>
 
-	<div class="signup-section">
-		<div class="signup-card">
-			<h2>Get Started with PASTA</h2>
-			<form method="POST" use:enhance>
-				<div class="form-group">
-					<label for="name">Full Name</label>
-					<input
-						type="text"
-						id="name"
-						name="name"
-						required
-						placeholder="Enter your full name"
-						class="input"
-					/>
-				</div>
+	<div class="py-16 px-8">
+		<h2 class="text-4xl font-bold text-center mb-12 text-slate-900">Simple, Transparent Pricing</h2>
+		<div class="pricing-section">
+			<div class="pricing-tabs flex justify-center gap-4 mb-12">
+				{#each pricingTabs as tab, i}
+					<button
+						class="px-6 py-2 rounded-full text-lg font-medium transition-all {activeTab === i
+							? 'bg-sky-600 text-white'
+							: 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
+						on:click={() => (activeTab = i)}
+					>
+						{tab.name}
+					</button>
+				{/each}
+			</div>
 
-				<div class="form-group">
-					<label for="email">Work Email</label>
-					<input
-						type="email"
-						id="email"
-						name="email"
-						required
-						placeholder="your.name@govt.nz"
-						class="input"
-					/>
-				</div>
-
-				<div class="form-group">
-					<label for="organization">Organization</label>
-					<input
-						type="text"
-						id="organization"
-						name="organization"
-						required
-						placeholder="Your government department"
-						class="input"
-					/>
-				</div>
-
-				<div class="form-group">
-					<label for="challenges">What challenges do you face in property project management?</label>
-					<textarea
-						id="challenges"
-						name="challenges"
-						rows="4"
-						required
-						placeholder="Tell us about your current challenges..."
-						class="input"
-					></textarea>
-				</div>
-
-				<button type="submit" class="btn-primary w-full">Request Access</button>
-			</form>
+			<div class="pricing-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+				{#each pricingTabs[0].plans as plan}
+					<div class="bg-white p-8 rounded-xl shadow-lg border border-slate-200">
+						<h3 class="text-2xl font-bold mb-2 text-slate-900">{plan.name}</h3>
+						<div class="flex items-baseline mb-8">
+							<span class="text-4xl font-bold text-sky-600">{activeTab === 1 ? plan.annualPrice : plan.price}</span>
+							<span class="text-slate-600 ml-2">{plan.period}</span>
+						</div>
+						<ul class="space-y-4 mb-8">
+							{#each plan.features as feature}
+								<li class="flex items-center text-slate-600">
+									<svg
+										class="w-5 h-5 text-sky-600 mr-3"
+										xmlns="http://www.w3.org/2000/svg"
+										viewBox="0 0 20 20"
+										fill="currentColor"
+									>
+										<path
+											fill-rule="evenodd"
+											d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+											clip-rule="evenodd"
+										/>
+									</svg>
+									{feature}
+								</li>
+							{/each}
+						</ul>
+						
+					</div>
+				{/each}
+			</div>
 		</div>
 	</div>
-</section>
+
+	<div class="py-16 px-8">
+		<div class="max-w-lg mx-auto bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+			<div class="p-6 border-b border-slate-200">
+				<h2 class="text-2xl font-bold text-slate-900">Get Started with PASTA</h2>
+			</div>
+			<div class="p-6">
+				<div class="signup-section">
+					<form method="POST" use:enhance>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+							<div class="space-y-4">
+								<label class="block">
+									<span class="text-slate-700 mb-1 block">Name</span>
+									<input
+										type="text"
+										name="name"
+										class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:border-transparent"
+										required
+									/>
+								</label>
+								<label class="block">
+									<span class="text-slate-700 mb-1 block">Email</span>
+									<input
+										type="email"
+										name="email"
+										class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:border-transparent"
+										required
+									/>
+								</label>
+								<label class="block">
+									<span class="text-slate-700 mb-1 block">Company</span>
+									<input
+										type="text"
+										name="company"
+										class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:border-transparent"
+										required
+									/>
+								</label>
+							</div>
+							<div class="space-y-4">
+								<label class="block">
+									<span class="text-slate-700 mb-1 block">Message</span>
+									<textarea
+										name="message"
+										rows="6"
+										class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:border-transparent"
+										required
+									/>
+								</label>
+								<button
+									type="submit"
+									class="w-full py-3 px-6 rounded-lg bg-sky-600 text-white font-semibold hover:bg-sky-700 transition-colors"
+								>
+									Send Message
+								</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
 
 <style>
-	.landing {
-		width: 100%;
-	}
-
-	.hero {
-		background: linear-gradient(160deg, var(--color-bg-0) 0%, var(--color-bg-1) 100%);
-		padding: 6rem 2rem;
-		text-align: center;
-	}
-
-	h1 {
-		font-size: 4rem;
-		color: var(--color-theme-1);
-		margin: 0;
-		font-weight: 800;
-		letter-spacing: -0.03em;
-	}
-
-	.tagline {
-		font-size: 1.75rem;
-		color: var(--color-theme-2);
-		margin: 1rem 0;
-		font-weight: 600;
-	}
-
-	.subtitle {
-		font-size: 1.25rem;
-		color: var(--color-text-light);
-		max-width: 600px;
-		margin: 0 auto 2rem;
-	}
-
-	.cta-buttons {
-		display: flex;
-		gap: 1rem;
-		justify-content: center;
-	}
-
-	.btn-primary {
-		padding: 0.75rem 1.5rem;
-		background-color: var(--color-theme-1);
-		color: white;
-		border: none;
-		border-radius: 0.5rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s;
-	}
-
-	.btn-primary:hover {
-		background-color: var(--color-theme-2);
-		transform: translateY(-1px);
-	}
-
-	.btn-outline {
-		padding: 0.75rem 1.5rem;
-		background-color: transparent;
-		color: var(--color-theme-1);
-		border: 2px solid var(--color-theme-1);
-		border-radius: 0.5rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s;
-	}
-
-	.btn-outline:hover {
-		background-color: var(--color-theme-1);
-		color: white;
-		transform: translateY(-1px);
-	}
-
-	.features-section,
-	.pricing-section,
-	.signup-section {
-		padding: 4rem 2rem;
-		max-width: 1200px;
-		margin: 0 auto;
-	}
-
-	h2 {
-		text-align: center;
-		font-size: 2.5rem;
-		margin-bottom: 3rem;
-		color: var(--color-text);
-	}
-
-	.features-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-		gap: 2rem;
-	}
-
-	.feature-card {
-		background: white;
-		padding: 2rem;
-		border-radius: 1rem;
-		box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-		text-align: center;
-	}
-
-	.feature-icon {
-		width: 3rem;
-		height: 3rem;
-		color: var(--color-theme-1);
-		margin: 0 auto 1.5rem;
-	}
-
-	.feature-card h3 {
-		font-size: 1.25rem;
-		margin-bottom: 1rem;
-		color: var(--color-text);
-	}
-
-	.feature-card p {
-		color: var(--color-text-light);
-		margin: 0;
-	}
-
-	.pricing-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-		gap: 1rem;
-		padding: 0 1rem;
-		max-width: 1200px;
-		margin: 0 auto;
-	}
-
-	.pricing-card {
-		background: white;
-		padding: 2rem 1.5rem;
-		border-radius: 0.75rem;
-		box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-		text-align: center;
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.price {
-		margin: 1rem 0;
-	}
-
-	.amount {
-		font-size: 2.5rem;
-		font-weight: 700;
-		color: var(--color-theme-1);
-	}
-
-	.period {
-		color: var(--color-text-light);
-		margin-left: 0.5rem;
-	}
-
-	.features-list {
-		list-style: none;
-		padding: 0;
-		margin: 1.5rem 0;
-		text-align: left;
-		flex-grow: 1;
-	}
-
-	.features-list li {
-		margin-bottom: 0.5rem;
-		padding-left: 1.25rem;
-		position: relative;
-		font-size: 0.95rem;
-		color: var(--color-text);
-	}
-
-	.signup-card {
-		background: white;
-		padding: 2.5rem;
-		border-radius: 1rem;
-		box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-		max-width: 500px;
-		margin: 0 auto;
-	}
-
-	.form-group {
-		margin-bottom: 1.5rem;
-	}
-
-	label {
-		display: block;
-		margin-bottom: 0.5rem;
-		color: var(--color-text);
-		font-weight: 500;
-	}
-
-	.input {
-		width: 100%;
-		padding: 0.75rem;
-		border: 1px solid var(--color-bg-2);
-		border-radius: 0.5rem;
-		font-size: 1rem;
-		transition: all 0.2s;
-		background-color: var(--color-bg-0);
-	}
-
-	.input:focus {
-		border-color: var(--color-theme-1);
-		outline: none;
-		box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
-	}
-
-	textarea.input {
-		resize: vertical;
-		min-height: 100px;
-	}
-
-	.w-full {
-		width: 100%;
-	}
-
-	@media (max-width: 768px) {
-		.hero {
-			padding: 4rem 1rem;
-		}
-
-		h1 {
-			font-size: 3rem;
-		}
-
-		.tagline {
-			font-size: 1.5rem;
-		}
-
-		.cta-buttons {
-			flex-direction: column;
-		}
-
-		.features-section,
-		.pricing-section,
-		.signup-section {
-			padding: 2rem 1rem;
-		}
-
-		.pricing-grid {
-			grid-template-columns: 1fr;
-		}
+	:global(body) {
+		background-color: rgb(248 250 252);
 	}
 </style>
