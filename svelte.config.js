@@ -16,7 +16,7 @@ const config = {
 			strict: true
 		}),
 		paths: {
-			base: dev ? '' : '/pasta-landing-v2'
+			base: ''
 		},
 		prerender: {
 			handleHttpError: ({ path, referrer, message }) => {
