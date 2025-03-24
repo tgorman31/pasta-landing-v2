@@ -12,10 +12,10 @@
 		<a href="/" class="logo">PASTA</a>
 		<nav class="hidden md:block">
 			<ul>
-				<li><a href="/#features">Features</a></li>
-				<li><a href="/#pricing">Pricing</a></li>
-				<li><a href="/#about">About</a></li>
-				<li class="cta"><a href="/#signup">Get Started</a></li>
+				<li><a href="#features">Features</a></li>
+				<li><a href="#pricing">Pricing</a></li>
+				<li><a href="#contact">Contact</a></li>
+				<li class="cta"><a href="#contact">Get Started</a></li>
 			</ul>
 		</nav>
 		<div class="md:hidden">
@@ -45,28 +45,28 @@
 					transition:fade={{ duration: 100 }}
 				>
 					<a
-						href="/#features"
+						href="#features"
 						class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
 						on:click={toggleMenu}
 					>
 						Features
 					</a>
 					<a
-						href="/#pricing"
+						href="#pricing"
 						class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
 						on:click={toggleMenu}
 					>
 						Pricing
 					</a>
 					<a
-						href="/#about"
+						href="#contact"
 						class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
 						on:click={toggleMenu}
 					>
-						About
+						Contact
 					</a>
 					<a
-						href="/#signup"
+						href="#contact"
 						class="block px-4 py-2 text-sm text-theme-1 font-semibold hover:bg-gray-100"
 						on:click={toggleMenu}
 					>

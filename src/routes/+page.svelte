@@ -79,6 +79,7 @@
 					features: [
 						'Includes all Essential Tier features',
 						'Enhanced financial management with forecasting capabilities',
+						'Per Project Invoice Management',
 						'Advanced reporting tools (Kanban boards, Gantt charts)',
 						'Improved contractor collaboration with role-based data sharing',
 						'Integration with external tools (e.g., Microsoft 365)',
@@ -99,20 +100,20 @@
 						'Premium security and compliance enhancements'
 					]
 				},
-				{
-					name: 'Enterprise',
-					price: 'Custom Pricing (Contact Sales)',
-					annualPrice: 'Custom Pricing (Contact Sales)',
-					period: '',
-					purpose: 'For very large projects or specialized requirements (often projects over $50M)',
-					features: [
-						'Fully customizable feature set',
-						'Option for isolated databases and enhanced data security',
-						'Dedicated account management and premium support',
-						'Advanced integrations (on-premise systems, custom APIs)',
-						'Custom reporting, consulting, and deployment options'
-					]
-				}
+				// {
+				// 	name: 'Enterprise',
+				// 	price: 'Custom Pricing (Contact Sales)',
+				// 	annualPrice: 'Custom Pricing (Contact Sales)',
+				// 	period: '',
+				// 	purpose: 'For very large projects or specialized requirements (often projects over $50M)',
+				// 	features: [
+				// 		'Fully customizable feature set',
+				// 		'Option for isolated databases and enhanced data security',
+				// 		'Dedicated account management and premium support',
+				// 		'Advanced integrations (on-premise systems, custom APIs)',
+				// 		'Custom reporting, consulting, and deployment options'
+				// 	]
+				// }
 			]
 		},
 		{
@@ -123,6 +124,9 @@
 	];
 
 	let activeTab = 0;
+	let sending = false;
+	let success = false;
+	let error = false;
 </script>
 
 <svelte:head>
@@ -145,14 +149,14 @@
 					<div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
 						<div class="rounded-md shadow">
 							<button class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-sky-600 hover:bg-sky-700 md:py-4 md:text-lg md:px-10">
-								Request Demo
-							</button>
+								Find out more
+							</button> 
 						</div>
-						<div class="mt-3 sm:mt-0 sm:ml-3">
+						<!-- <div class="mt-3 sm:mt-0 sm:ml-3">
 							<button class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-sky-700 bg-sky-100 hover:bg-sky-200 md:py-4 md:text-lg md:px-10">
 								Learn More
 							</button>
-						</div>
+						</div> -->
 					</div>
 				</div>
 			</div>
@@ -168,7 +172,7 @@
 		</div>
 	</header>
 
-	<div class="py-24 bg-white">
+	<div class="py-24 bg-white" id="features">
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 			<div class="lg:text-center">
 				<h2 class="text-3xl font-extrabold text-slate-900 sm:text-4xl">Key Features</h2>
@@ -199,7 +203,7 @@
 		</div>
 	</div>
 
-	<div class="py-16 px-8">
+	<div class="py-16 px-8" id="pricing">
 		<h2 class="text-4xl font-bold text-center mb-12 text-slate-900">Simple, Transparent Pricing</h2>
 		<div class="pricing-section">
 			<div class="pricing-tabs flex justify-center gap-4 mb-12">
@@ -226,19 +230,20 @@
 						<ul class="space-y-4 mb-8">
 							{#each plan.features as feature}
 								<li class="flex items-center text-slate-600">
-									<svg
-										class="w-5 h-5 text-sky-600 mr-3"
-										xmlns="http://www.w3.org/2000/svg"
-										viewBox="0 0 20 20"
-										fill="currentColor"
-									>
-										<path
-											fill-rule="evenodd"
-											d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-											clip-rule="evenodd"
-										/>
-									</svg>
-									{feature}
+									<div class="flex-shrink-0 h-8 w-8 text-sky-600">
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											viewBox="0 0 24 24"
+											fill="currentColor"
+										>
+											<path
+												fill-rule="evenodd"
+												d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+												clip-rule="evenodd"
+											/>
+										</svg>
+									</div>
+									<span class="ml-3">{feature}</span>
 								</li>
 							{/each}
 						</ul>
@@ -249,14 +254,29 @@
 		</div>
 	</div>
 
-	<div class="py-16 px-8">
+	<div class="py-16 px-8" id="contact">
 		<div class="max-w-lg mx-auto bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
 			<div class="p-6 border-b border-slate-200">
 				<h2 class="text-2xl font-bold text-slate-900">Get Started with PASTA</h2>
 			</div>
 			<div class="p-6">
 				<div class="signup-section">
-					<form method="POST" use:enhance>
+					<form
+						method="POST"
+						use:enhance={() => {
+							sending = true;
+							return async ({ result }) => {
+								sending = false;
+								if (result.type === 'success') {
+									success = true;
+									const form = document.querySelector('form');
+									if (form) form.reset();
+								} else {
+									error = true;
+								}
+							};
+						}}
+					>
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 							<div class="space-y-4">
 								<label class="block">
@@ -299,13 +319,24 @@
 								</label>
 								<button
 									type="submit"
-									class="w-full py-3 px-6 rounded-lg bg-sky-600 text-white font-semibold hover:bg-sky-700 transition-colors"
+									class="w-full py-3 px-6 rounded-lg bg-sky-600 text-white font-semibold hover:bg-sky-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+									disabled={sending}
 								>
-									Send Message
+									{sending ? 'Sending...' : 'Send Message'}
 								</button>
 							</div>
 						</div>
 					</form>
+					{#if success}
+						<div class="mt-4 p-4 bg-green-50 text-green-700 rounded-lg" transition:fade>
+							Thank you for your message! We'll get back to you soon.
+						</div>
+					{/if}
+					{#if error}
+						<div class="mt-4 p-4 bg-red-50 text-red-700 rounded-lg" transition:fade>
+							Sorry, there was an error sending your message. Please try again later.
+						</div>
+					{/if}
 				</div>
 			</div>
 		</div>
