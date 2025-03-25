@@ -151,22 +151,10 @@
 			display: none;
 		}
 
-		.md\\:hidden {
-			display: block;
-		}
 
-		.md\\:block {
-			display: none;
-		}
 	}
 
 	@media (min-width: 769px) {
-		.md\\:hidden {
-			display: none;
-		}
 
-		.md\\:block {
-			display: block;
-		}
 	}
 </style>
