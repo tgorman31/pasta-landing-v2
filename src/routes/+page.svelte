@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { fade } from 'svelte/transition';
+	import Turnstile from '$lib/components/Turnstile.svelte';
 
 	const features = [
 		{
@@ -127,6 +128,38 @@
 	let sending = false;
 	let success = false;
 	let error = false;
+	let turnstileToken = '';
+
+	function handleTurnstileResponse(token: string): void {
+		turnstileToken = token;
+	}
+
+	async function submitForm(form: HTMLFormElement) {
+		const formData = new FormData(form);
+		const data = Object.fromEntries(formData.entries());
+		
+		try {
+			const response = await fetch('/.netlify/functions/submit-form', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					...data,
+					'cf-turnstile-response': turnstileToken
+				}),
+			});
+
+			if (!response.ok) {
+				throw new Error('Form submission failed');
+			}
+
+			return { type: 'success' };
+		} catch (err) {
+			console.error('Form submission error:', err);
+			return { type: 'error' };
+		}
+	}
 </script>
 
 <svelte:head>
@@ -262,21 +295,26 @@
 			<div class="p-6">
 				<div class="signup-section">
 					<form
+						name="contact"
 						method="POST"
-						use:enhance={() => {
+						onsubmit={(e) => {
+							e.preventDefault();
 							sending = true;
-							return async ({ result }) => {
+							submitForm(e.currentTarget).then((result) => {
 								sending = false;
 								if (result.type === 'success') {
 									success = true;
-									const form = document.querySelector('form');
-									if (form) form.reset();
+									turnstileToken = '';
+									if (window.turnstile) window.turnstile.reset();
+									e.currentTarget.reset();
 								} else {
 									error = true;
 								}
-							};
+							});
 						}}
 					>
+						<input type="hidden" name="form-name" value="contact" />
+						<input type="hidden" name="cf-turnstile-response" value={turnstileToken} />
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 							<div class="space-y-4">
 								<label class="block">
@@ -317,10 +355,15 @@
 										required
 									/>
 								</label>
+								<Turnstile
+									sitekey="0x4AAAAAABC7oqi2YGdhr7Ch"
+									theme="light"
+									callback={handleTurnstileResponse}
+								/>
 								<button
 									type="submit"
 									class="w-full py-3 px-6 rounded-lg bg-sky-600 text-white font-semibold hover:bg-sky-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-									disabled={sending}
+									disabled={sending || !turnstileToken}
 								>
 									{sending ? 'Sending...' : 'Send Message'}
 								</button>
