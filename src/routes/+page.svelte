@@ -150,14 +150,32 @@
 				}),
 			});
 
+			const result = await response.json();
+
 			if (!response.ok) {
-				throw new Error('Form submission failed');
+				throw new Error(result.error || 'Form submission failed');
 			}
 
 			return { type: 'success' };
 		} catch (err) {
 			console.error('Form submission error:', err);
-			return { type: 'error' };
+			return { type: 'error', message: err instanceof Error ? err.message : 'Unknown error' };
+		}
+	}
+
+	async function handleSubmit(e: SubmitEvent) {
+		e.preventDefault();
+		sending = true;
+		const form = e.target as HTMLFormElement;
+		const result = await submitForm(form);
+		sending = false;
+		if (result.type === 'success') {
+			success = true;
+			turnstileToken = '';
+			if (window.turnstile) window.turnstile.reset();
+			form.reset();
+		} else {
+			error = true;
 		}
 	}
 </script>
@@ -296,22 +314,7 @@
 				<div class="signup-section">
 					<form
 						name="contact"
-						method="POST"
-						onsubmit={(e) => {
-							e.preventDefault();
-							sending = true;
-							submitForm(e.currentTarget).then((result) => {
-								sending = false;
-								if (result.type === 'success') {
-									success = true;
-									turnstileToken = '';
-									if (window.turnstile) window.turnstile.reset();
-									e.currentTarget.reset();
-								} else {
-									error = true;
-								}
-							});
-						}}
+						on:submit={handleSubmit}
 					>
 						<input type="hidden" name="form-name" value="contact" />
 						<input type="hidden" name="cf-turnstile-response" value={turnstileToken} />
