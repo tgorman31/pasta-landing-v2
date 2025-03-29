@@ -2,17 +2,17 @@ import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '$env/static/private';
 import type { Actions } from './$types';
 
-// Initialize Supabase client
-const supabase = createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-);
-
 export const actions = {
     default: async ({ request }) => {
         const data = await request.formData();
         
         try {
+            // Initialize Supabase client only when needed
+            const supabase = createClient(
+                SUPABASE_URL,
+                SUPABASE_ANON_KEY
+            );
+
             const { error: supabaseError } = await supabase
                 .from('contact_submissions')
                 .insert([
