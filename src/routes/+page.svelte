@@ -137,6 +137,8 @@
 		potentialSavings: 0
 	};
 
+	$: isDisabled = dev ? sending : (sending || !turnstileToken);
+
 	interface ProjectRange {
 		range: string;
 		count: number;
@@ -178,8 +180,6 @@
 	function handleTurnstileResponse(token: string): void {
 		console.log('Turnstile response received:', token);
 		turnstileToken = token;
-		// Force a UI update
-		turnstileToken = turnstileToken;
 	}
 
 	async function submitForm(form: HTMLFormElement) {
@@ -258,14 +258,6 @@
 		} else {
 			error = true;
 		}
-	}
-
-	function isSubmitDisabled(): boolean {
-		console.log('Checking submit disabled state:', { sending, turnstileToken, dev });
-		if (dev) {
-			return sending;
-		}
-		return sending || !turnstileToken;
 	}
 </script>
 
@@ -488,7 +480,7 @@
 							<button
 								type="submit"
 								class="w-full py-4 px-6 rounded-lg bg-sky-600 text-white font-semibold hover:bg-sky-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-								disabled={isSubmitDisabled()}
+								disabled={isDisabled}
 							>
 								{sending ? 'Sending...' : 'Calculate Savings'}
 							</button>
