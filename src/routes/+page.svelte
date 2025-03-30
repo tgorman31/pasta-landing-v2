@@ -176,7 +176,10 @@
 	}
 
 	function handleTurnstileResponse(token: string): void {
+		console.log('Turnstile response received:', token);
 		turnstileToken = token;
+		// Force a UI update
+		turnstileToken = turnstileToken;
 	}
 
 	async function submitForm(form: HTMLFormElement) {
@@ -258,6 +261,7 @@
 	}
 
 	function isSubmitDisabled(): boolean {
+		console.log('Checking submit disabled state:', { sending, turnstileToken, dev });
 		if (dev) {
 			return sending;
 		}
