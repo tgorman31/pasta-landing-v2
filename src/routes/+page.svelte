@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { fade } from 'svelte/transition';
 	import Turnstile from '$lib/components/Turnstile.svelte';
+	import { dev } from '$app/environment';
 
 	const features = [
 		{
@@ -129,6 +130,50 @@
 	let success = false;
 	let error = false;
 	let turnstileToken = '';
+	let showModal = false;
+	let calculationResults = {
+		monthlyLicenseCost: 0,
+		portfolioSize: 0,
+		potentialSavings: 0
+	};
+
+	interface ProjectRange {
+		range: string;
+		count: number;
+		value: number;
+		licensePrice: number;
+	}
+
+	const PROJECT_RANGES = [
+		{ range: "$0 - $100K", value: 50000, licensePrice: 25 },
+		{ range: "$100K - $500K", value: 250000, licensePrice: 75 },
+		{ range: "$500K - $5M", value: 2500000, licensePrice: 75 },
+		{ range: "$5M - $10M", value: 7500000, licensePrice: 250 },
+		{ range: "$10M - $50M", value: 25000000, licensePrice: 250 },
+		{ range: ">$50M", value: 50000000, licensePrice: 250 }
+	];
+
+	function calculateResults(formData: FormData): void {
+		let totalPortfolioSize = 0;
+		let totalMonthlyCost = 0;
+
+		PROJECT_RANGES.forEach((range) => {
+			const count = parseInt(formData.get(`project_range_${range.range}`) as string) || 0;
+			totalPortfolioSize += count * range.value;
+			totalMonthlyCost += count * range.licensePrice;
+		});
+
+		const reworkCost = totalPortfolioSize * 0.05; // 5% of portfolio is rework
+		const avoidableRework = reworkCost * 0.1419; // 14.19% of rework is avoidable
+		
+		calculationResults = {
+			monthlyLicenseCost: totalMonthlyCost,
+			portfolioSize: totalPortfolioSize,
+			potentialSavings: avoidableRework
+		};
+
+		showModal = true;
+	}
 
 	function handleTurnstileResponse(token: string): void {
 		turnstileToken = token;
@@ -138,6 +183,31 @@
 		const formData = new FormData(form);
 		const data = Object.fromEntries(formData.entries());
 		
+		// Process license data
+		const licenseData = {
+			portfolio: data.portfolio_license === 'on' ? {
+				type: 'portfolio',
+				seats: parseInt(data.portfolio_size as string) || 0
+			} : null,
+			essential: data.essential_license === 'on' ? {
+				type: 'essential',
+				projects: parseInt(data.essential_projects as string) || 0
+			} : null,
+			standard: data.standard_license === 'on' ? {
+				type: 'standard',
+				projects: parseInt(data.standard_projects as string) || 0
+			} : null,
+			advanced: data.advanced_license === 'on' ? {
+				type: 'advanced',
+				projects: parseInt(data.advanced_projects as string) || 0
+			} : null
+		};
+
+		// Filter out unchecked licenses
+		const selectedLicenses = Object.entries(licenseData)
+			.filter(([_, value]) => value !== null)
+			.reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+		
 		try {
 			const response = await fetch('/.netlify/functions/submit-form', {
 				method: 'POST',
@@ -145,7 +215,11 @@
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify({
-					...data,
+					name: data.name,
+					email: data.email,
+					company: data.company,
+					message: data.message,
+					licenses: selectedLicenses,
 					'cf-turnstile-response': turnstileToken
 				}),
 			});
@@ -165,8 +239,12 @@
 
 	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
-		sending = true;
 		const form = e.target as HTMLFormElement;
+		const formData = new FormData(form);
+		
+		calculateResults(formData);
+		
+		sending = true;
 		const result = await submitForm(form);
 		sending = false;
 		if (result.type === 'success') {
@@ -177,6 +255,13 @@
 		} else {
 			error = true;
 		}
+	}
+
+	function isSubmitDisabled(): boolean {
+		if (dev) {
+			return sending;
+		}
+		return sending || !turnstileToken;
 	}
 </script>
 
@@ -277,7 +362,9 @@
 						<div class="flex items-baseline mb-8">
 							<span class="text-4xl font-bold text-sky-600">{activeTab === 1 ? plan.annualPrice : plan.price}</span>
 							<span class="text-slate-600 ml-2">{plan.period}</span>
-						</div>
+							</div>
+							<p class="text-slate-600 mb-4 text-l">{plan.purpose}</p>
+						
 						<ul class="space-y-4 mb-8">
 							{#each plan.features as feature}
 								<li class="flex items-center text-slate-600">
@@ -306,80 +393,110 @@
 	</div>
 
 	<div class="py-16 px-8" id="contact">
-		<div class="max-w-lg mx-auto bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
-			<div class="p-6 border-b border-slate-200">
+		<div class="max-w-2xl mx-auto bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+			<div class="p-8 border-b border-slate-200">
 				<h2 class="text-2xl font-bold text-slate-900">Get Started with PASTA</h2>
+				<p class="mt-2 text-slate-600">Tell us about your needs and we'll help you get started with the right solution.</p>
 			</div>
-			<div class="p-6">
+			<div class="p-8">
 				<div class="signup-section">
 					<form
 						name="contact"
 						on:submit={handleSubmit}
+						class="space-y-8"
 					>
 						<input type="hidden" name="form-name" value="contact" />
 						<input type="hidden" name="cf-turnstile-response" value={turnstileToken} />
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-							<div class="space-y-4">
+						
+						<div class="space-y-6">
+							<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 								<label class="block">
-									<span class="text-slate-700 mb-1 block">Name</span>
+									<span class="text-slate-700 mb-2 block">Name</span>
 									<input
 										type="text"
 										name="name"
-										class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:border-transparent"
+										class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:border-transparent"
 										required
 									/>
 								</label>
 								<label class="block">
-									<span class="text-slate-700 mb-1 block">Email</span>
+									<span class="text-slate-700 mb-2 block">Email</span>
 									<input
 										type="email"
 										name="email"
-										class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:border-transparent"
-										required
-									/>
-								</label>
-								<label class="block">
-									<span class="text-slate-700 mb-1 block">Company</span>
-									<input
-										type="text"
-										name="company"
-										class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:border-transparent"
+										class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:border-transparent"
 										required
 									/>
 								</label>
 							</div>
-							<div class="space-y-4">
-								<label class="block">
-									<span class="text-slate-700 mb-1 block">Message</span>
-									<textarea
-										name="message"
-										rows="6"
-										class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:border-transparent"
-										required
-									/>
-								</label>
-								<Turnstile
-									sitekey="0x4AAAAAABC7oqi2YGdhr7Ch"
-									theme="light"
-									callback={handleTurnstileResponse}
+
+							<label class="block">
+								<span class="text-slate-700 mb-2 block">Company</span>
+								<input
+									type="text"
+									name="company"
+									class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:border-transparent"
+									required
 								/>
-								<button
-									type="submit"
-									class="w-full py-3 px-6 rounded-lg bg-sky-600 text-white font-semibold hover:bg-sky-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-									disabled={sending || !turnstileToken}
-								>
-									{sending ? 'Sending...' : 'Send Message'}
-								</button>
+							</label>
+
+							<div class="space-y-4">
+								<span class="text-slate-700 block font-medium">Project Portfolio</span>
+								<p class="text-slate-600 text-sm">Please indicate how many projects you have in each value range:</p>
+								
+								<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+									{#each PROJECT_RANGES as range}
+										<label class="block">
+											<span class="text-slate-600 mb-2 block">{range.range}</span>
+											<input
+												type="number"
+												name="project_range_{range.range}"
+												min="0"
+												class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:border-transparent"
+												placeholder="Number of projects"
+											/>
+										</label>
+									{/each}
+								</div>
 							</div>
+
+							<label class="block">
+								<span class="text-slate-700 mb-2 block">Additional Information</span>
+								<textarea
+									name="message"
+									rows="4"
+									class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:border-transparent"
+									placeholder="Tell us about issues you face in project management"
+									required
+								></textarea>
+							</label>
+
+							<div class="pt-4">
+								{#if !dev}
+									<Turnstile
+										sitekey="0x4AAAAAABC7oqi2YGdhr7Ch"
+										theme="light"
+										callback={handleTurnstileResponse}
+									/>
+								{/if}
+							</div>
+
+							<button
+								type="submit"
+								class="w-full py-4 px-6 rounded-lg bg-sky-600 text-white font-semibold hover:bg-sky-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+								disabled={isSubmitDisabled()}
+							>
+								{sending ? 'Sending...' : 'Calculate Savings'}
+							</button>
 						</div>
 					</form>
 					{#if success}
-						<div class="mt-4 p-4 bg-green-50 text-green-700 rounded-lg" transition:fade>
+						<div class="mt-6 p-4 bg-green-50 text-green-700 rounded-lg" transition:fade>
 							Thank you for your message! We'll get back to you soon.
 						</div>
 					{/if}
 					{#if error}
-						<div class="mt-4 p-4 bg-red-50 text-red-700 rounded-lg" transition:fade>
+						<div class="mt-6 p-4 bg-red-50 text-red-700 rounded-lg" transition:fade>
 							Sorry, there was an error sending your message. Please try again later.
 						</div>
 					{/if}
@@ -388,6 +505,54 @@
 		</div>
 	</div>
 </div>
+
+{#if showModal}
+	<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" on:click={() => showModal = false}>
+		<div class="bg-white rounded-xl p-8 max-w-2xl w-full mx-4 space-y-6" on:click|stopPropagation>
+			<h3 class="text-2xl font-bold text-slate-900">Your Potential Savings with PASTA</h3>
+			
+			<div class="space-y-8">
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<div class="p-6 bg-slate-50 rounded-lg">
+						<h4 class="text-lg font-semibold text-slate-700">Monthly Investment</h4>
+						<p class="text-3xl font-bold text-sky-600">${calculationResults.monthlyLicenseCost}</p>
+						<p class="text-sm text-slate-600 mt-2">Total monthly license cost</p>
+					</div>
+					
+					<div class="p-6 bg-slate-50 rounded-lg">
+						<h4 class="text-lg font-semibold text-slate-700">Portfolio Size</h4>
+						<p class="text-3xl font-bold text-sky-600">${(calculationResults.portfolioSize / 1000000).toFixed(1)}M</p>
+						<p class="text-sm text-slate-600 mt-2">Estimated total value</p>
+					</div>
+				</div>
+
+				<div class="p-6 bg-green-50 rounded-lg">
+					<h4 class="text-lg font-semibold text-green-700">Potential Annual Savings</h4>
+					<p class="text-4xl font-bold text-green-600">${(calculationResults.potentialSavings / 1000000).toFixed(1)}M</p>
+					<p class="text-sm text-green-600 mt-2">Based on industry statistics for avoidable rework costs</p>
+				</div>
+
+				<div class="space-y-4">
+					<h4 class="font-semibold text-slate-700">How we calculated this:</h4>
+					<ul class="list-disc list-inside text-sm text-slate-600 space-y-2">
+						<li>Industry research shows 5% of construction spend goes to rework</li>
+						<li>14.19% of rework is caused by decisions using bad data</li>
+						<li>PASTA helps eliminate these avoidable costs through better data management</li>
+					</ul>
+				</div>
+			</div>
+
+			<div class="flex justify-end mt-6">
+				<button 
+					class="px-6 py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
+					on:click={() => showModal = false}
+				>
+					Close
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
 
 <style>
 	:global(body) {
