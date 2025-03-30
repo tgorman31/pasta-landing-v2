@@ -507,8 +507,15 @@
 </div>
 
 {#if showModal}
-	<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" on:click={() => showModal = false}>
-		<div class="bg-white rounded-xl p-8 max-w-2xl w-full mx-4 space-y-6" on:click|stopPropagation>
+	<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+		<button 
+			class="absolute inset-0 w-full h-full cursor-default"
+			on:click={() => showModal = false}
+			on:keydown={(e) => e.key === 'Escape' && (showModal = false)}
+		>
+			<span class="sr-only">Close modal</span>
+		</button>
+		<div class="relative bg-white rounded-xl p-8 max-w-2xl w-full mx-4 space-y-6">
 			<h3 class="text-2xl font-bold text-slate-900">Your Potential Savings with PASTA</h3>
 			
 			<div class="space-y-8">
