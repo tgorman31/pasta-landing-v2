@@ -137,7 +137,7 @@
 		potentialSavings: 0
 	};
 
-	$: isDisabled = dev ? sending : (sending || !turnstileToken);
+	$: isDisabled = !dev && !turnstileToken || sending;
 
 	interface ProjectRange {
 		range: string;
@@ -178,66 +178,7 @@
 	}
 
 	function handleTurnstileResponse(token: string): void {
-		console.log('Turnstile response received:', token);
 		turnstileToken = token;
-	}
-
-	async function submitForm(form: HTMLFormElement) {
-		const formData = new FormData(form);
-		const data = Object.fromEntries(formData.entries());
-		
-		// Process license data
-		const licenseData = {
-			portfolio: data.portfolio_license === 'on' ? {
-				type: 'portfolio',
-				seats: parseInt(data.portfolio_size as string) || 0
-			} : null,
-			essential: data.essential_license === 'on' ? {
-				type: 'essential',
-				projects: parseInt(data.essential_projects as string) || 0
-			} : null,
-			standard: data.standard_license === 'on' ? {
-				type: 'standard',
-				projects: parseInt(data.standard_projects as string) || 0
-			} : null,
-			advanced: data.advanced_license === 'on' ? {
-				type: 'advanced',
-				projects: parseInt(data.advanced_projects as string) || 0
-			} : null
-		};
-
-		// Filter out unchecked licenses
-		const selectedLicenses = Object.entries(licenseData)
-			.filter(([_, value]) => value !== null)
-			.reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
-		
-		try {
-			const response = await fetch('/.netlify/functions/submit-form', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					name: data.name,
-					email: data.email,
-					company: data.company,
-					message: data.message,
-					licenses: selectedLicenses,
-					'cf-turnstile-response': turnstileToken
-				}),
-			});
-
-			const result = await response.json();
-
-			if (!response.ok) {
-				throw new Error(result.error || 'Form submission failed');
-			}
-
-			return { type: 'success' };
-		} catch (err) {
-			console.error('Form submission error:', err);
-			return { type: 'error', message: err instanceof Error ? err.message : 'Unknown error' };
-		}
 	}
 
 	async function handleSubmit(e: SubmitEvent) {
@@ -248,16 +189,21 @@
 		calculateResults(formData);
 		
 		sending = true;
-		const result = await submitForm(form);
-		sending = false;
-		if (result.type === 'success') {
+		try {
+			await fetch('/', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: new URLSearchParams(formData as any).toString()
+			});
 			success = true;
 			turnstileToken = '';
 			if (window.turnstile) window.turnstile.reset();
 			form.reset();
-		} else {
+		} catch (err) {
+			console.error('Form submission error:', err);
 			error = true;
 		}
+		sending = false;
 	}
 </script>
 
@@ -398,11 +344,13 @@
 				<div class="signup-section">
 					<form
 						name="contact"
+						method="POST"
+						data-netlify="true"
+						data-netlify-recaptcha="true"
 						on:submit={handleSubmit}
 						class="space-y-8"
 					>
 						<input type="hidden" name="form-name" value="contact" />
-						<input type="hidden" name="cf-turnstile-response" value={turnstileToken} />
 						
 						<div class="space-y-6">
 							<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
