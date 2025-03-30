@@ -184,10 +184,16 @@
 		
 		sending = true;
 		try {
-			await fetch("/", {
+			const response = await fetch("/.netlify/functions/submission-created", {
 				method: "POST",
-				body: formData
+				headers: { "Content-Type": "application/x-www-form-urlencoded" },
+				body: new URLSearchParams(formData as any).toString()
 			});
+			
+			if (!response.ok) {
+				throw new Error(`Form submission failed with status ${response.status}`);
+			}
+			
 			success = true;
 			form.reset();
 		} catch (err) {
@@ -336,6 +342,7 @@
 					<form
 						name="contact"
 						method="POST"
+						action="/"
 						data-netlify="true"
 						data-netlify-recaptcha="true"
 						enctype="multipart/form-data"
