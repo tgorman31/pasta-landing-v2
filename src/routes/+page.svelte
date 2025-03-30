@@ -176,31 +176,11 @@
 	}
 
 	async function handleSubmit(e: SubmitEvent) {
-		e.preventDefault();
 		const form = e.target as HTMLFormElement;
 		const formData = new FormData(form);
 		
+		// Calculate results before form submission
 		calculateResults(formData);
-		
-		sending = true;
-		try {
-			const response = await fetch("/.netlify/functions/submission-created", {
-				method: "POST",
-				headers: { "Content-Type": "application/x-www-form-urlencoded" },
-				body: new URLSearchParams(formData as any).toString()
-			});
-			
-			if (!response.ok) {
-				throw new Error(`Form submission failed with status ${response.status}`);
-			}
-			
-			success = true;
-			form.reset();
-		} catch (err) {
-			console.error('Form submission error:', err);
-			error = true;
-		}
-		sending = false;
 	}
 </script>
 
@@ -342,14 +322,18 @@
 					<form
 						name="contact"
 						method="POST"
-						action="/"
 						data-netlify="true"
 						data-netlify-recaptcha="true"
-						enctype="multipart/form-data"
+						data-netlify-honeypot="bot-field"
 						on:submit={handleSubmit}
 						class="space-y-8"
 					>
 						<input type="hidden" name="form-name" value="contact" />
+						<p class="hidden">
+							<label>
+								Don't fill this out if you're human: <input name="bot-field" />
+							</label>
+						</p>
 						
 						<div class="space-y-6">
 							<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
