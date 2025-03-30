@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { fade } from 'svelte/transition';
-	import Turnstile from '$lib/components/Turnstile.svelte';
 	import { dev } from '$app/environment';
 
 	const features = [
@@ -129,7 +128,6 @@
 	let sending = false;
 	let success = false;
 	let error = false;
-	let turnstileToken = '';
 	let showModal = false;
 	let calculationResults = {
 		monthlyLicenseCost: 0,
@@ -137,7 +135,7 @@
 		potentialSavings: 0
 	};
 
-	$: isDisabled = !dev && !turnstileToken || sending;
+	$: isDisabled = sending;
 
 	interface ProjectRange {
 		range: string;
@@ -177,10 +175,6 @@
 		showModal = true;
 	}
 
-	function handleTurnstileResponse(token: string): void {
-		turnstileToken = token;
-	}
-
 	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
 		const form = e.target as HTMLFormElement;
@@ -190,14 +184,11 @@
 		
 		sending = true;
 		try {
-			await fetch('/', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-				body: new URLSearchParams(formData as any).toString()
+			await fetch("/", {
+				method: "POST",
+				body: formData
 			});
 			success = true;
-			turnstileToken = '';
-			if (window.turnstile) window.turnstile.reset();
 			form.reset();
 		} catch (err) {
 			console.error('Form submission error:', err);
@@ -347,6 +338,7 @@
 						method="POST"
 						data-netlify="true"
 						data-netlify-recaptcha="true"
+						enctype="multipart/form-data"
 						on:submit={handleSubmit}
 						class="space-y-8"
 					>
@@ -416,19 +408,13 @@
 							</label>
 
 							<div class="pt-4">
-								{#if !dev}
-									<Turnstile
-										sitekey="0x4AAAAAABC7oqi2YGdhr7Ch"
-										theme="light"
-										callback={handleTurnstileResponse}
-									/>
-								{/if}
+								<div data-netlify-recaptcha="true"></div>
 							</div>
 
 							<button
 								type="submit"
 								class="w-full py-4 px-6 rounded-lg bg-sky-600 text-white font-semibold hover:bg-sky-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-								disabled={isDisabled}
+								disabled={sending}
 							>
 								{sending ? 'Sending...' : 'Calculate Savings'}
 							</button>
