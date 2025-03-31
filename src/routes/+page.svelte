@@ -176,11 +176,33 @@
 	}
 
 	async function handleSubmit(e: SubmitEvent) {
+		e.preventDefault(); // Prevent default form submission
 		const form = e.target as HTMLFormElement;
 		const formData = new FormData(form);
 		
-		// Calculate results before form submission
+		// Calculate results and show modal
 		calculateResults(formData);
+		
+		sending = true;
+		try {
+			// Submit to Netlify forms
+			const response = await fetch('/', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: new URLSearchParams(formData as any).toString()
+			});
+			
+			if (!response.ok) {
+				throw new Error(`Form submission failed with status ${response.status}`);
+			}
+			
+			success = true;
+			form.reset();
+		} catch (err) {
+			console.error('Form submission error:', err);
+			error = true;
+		}
+		sending = false;
 	}
 </script>
 
@@ -325,6 +347,7 @@
 						data-netlify="true"
 						data-netlify-recaptcha="true"
 						data-netlify-honeypot="bot-field"
+						action="/"
 						on:submit={handleSubmit}
 						class="space-y-8"
 					>
